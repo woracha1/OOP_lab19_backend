@@ -71,20 +71,14 @@ public class MyMessageRepository implements MessageRepository {
 
     @Override
     public boolean editMessage(UUID userID, UUID messageID, String newMessage) {
+
         UserModel userModel = userRepository.getUserByID(userID);
-        if (userModel == null) {
-            return false;
-        }
+        if (userModel == null) return false ;
 
         MessageModel messageModel = getMessage(messageID);
+        if (messageModel == null ) return false ;
 
-        if (messageModel == null ) {
-            return false;
-        }
-
-        if (!messageModel.getUser().getUserID().equals(userID)) {
-            return false;
-        }
+        if (!messageModel.getUser().getUserID().equals(userID)) return false ;
 
         messageModel.setMessage(newMessage);
         return true;
