@@ -12,4 +12,8 @@ import java.util.UUID;
 public class UserModel {
     private UUID userID ;
     private String username;
+    // add new
+    private boolean isTyping;
+    private boolean isOnline;
+    private int sessionCount;
 }

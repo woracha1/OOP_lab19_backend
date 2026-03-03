@@ -6,6 +6,7 @@ import com.example.chatapp_worachai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.util.List;
 import java.util.UUID;
 
@@ -31,4 +32,8 @@ public class UserController {
         return userRepository.getUserList();
     }
 
+    @GetMapping("/typing")
+    public List<UserModel> getTypingUsers() {
+        return userRepository.getTypingUsers();
+    }
 }

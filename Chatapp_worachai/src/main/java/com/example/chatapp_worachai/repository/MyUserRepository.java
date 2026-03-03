@@ -12,10 +12,11 @@ import java.util.UUID;
 public class MyUserRepository implements UserRepository {
     private final Map<UUID, UserModel> users = new HashMap<>();
     private int userCount;
+    private boolean typing = false;
 
     @Override
     public UUID addUser(String username) {
-        UserModel userModel = new UserModel(UUID.randomUUID(), username);
+        UserModel userModel = new UserModel(UUID.randomUUID(), username, false, true,0);
         users.put(userModel.getUserID(), userModel);
         incrementUserCount(); // add new
         return userModel.getUserID();
@@ -32,6 +33,8 @@ public class MyUserRepository implements UserRepository {
         return users.get(id);
     }
 
+//--------------------------- prelab 20 --------------------------------------//
+
     @Override
     public int getUserCount() {
         return userCount;
@@ -39,7 +42,7 @@ public class MyUserRepository implements UserRepository {
 
     @Override
     public void incrementUserCount() {
-        userCount++ ;
+        userCount++;
     }
 
     @Override
@@ -47,9 +50,36 @@ public class MyUserRepository implements UserRepository {
         userCount--;
     }
 
-    //add new
+//--------------------------- lab 20 --------------------------------------//
     @Override
     public List<UserModel> getUserList() {
         return new java.util.ArrayList<>(users.values());
     }
+
+    @Override
+    public List<UserModel> getTypingUsers() {
+        return users.values().stream()
+                .filter(UserModel::isTyping)
+                .toList();
+    }
+
+    @Override
+    public boolean isTyping() {
+        return typing;
+    }
+
+    @Override
+    public void setTyping(boolean typing) {
+        this.typing = typing;
+    }
+
+    @Override
+    public List<UserModel> getOnlineUsers() {
+        return users.values()
+                .stream()
+                .filter(UserModel::isOnline)
+                .toList();
+    }
 }
+
+

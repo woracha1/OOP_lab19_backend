@@ -12,6 +12,11 @@ public interface UserRepository {
    int getUserCount();
    void incrementUserCount();
    void decrementUserCount();
+   //add for prelab 20
    List<UserModel> getUserList();
    void removeUserByUsername(String username);
+   List<UserModel> getTypingUsers();
+   boolean isTyping() ;
+   void setTyping(boolean typing);
+   List<UserModel> getOnlineUsers();
 }

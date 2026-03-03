@@ -1,40 +1,77 @@
 package com.example.chatapp_worachai.configuration;
 
+import com.example.chatapp_worachai.model.UserModel;
 import com.example.chatapp_worachai.repository.UserRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import java.security.Principal;
+import java.util.UUID;
+
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class WebsocketEventListener {
+
     private final UserRepository myUserRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     @EventListener
-    public void onConnect(SessionConnectedEvent event) {
-        myUserRepository.incrementUserCount();
+    public void handleWebSocketConnectListener(SessionConnectedEvent event) {
 
-        messagingTemplate.convertAndSend("/topic/user-number",
-                myUserRepository.getUserCount());
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+        Principal principal = accessor.getUser();
+
+        if (principal == null) return;
+
+        UUID userId = UUID.fromString(principal.getName());
+        UserModel model = myUserRepository.getUserByID(userId);
+
+        if (model != null) {
+            model.setSessionCount(model.getSessionCount() + 1);
+            model.setOnline(true);
+        }
+
+        broadcastUsers();
     }
 
     @EventListener
-    public void onDisconnect(SessionDisconnectEvent event) {
-        myUserRepository.decrementUserCount();
-        messagingTemplate
-                .convertAndSend("/topic/user-number", myUserRepository.getUserCount());
+    public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
+
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+        Principal principal = accessor.getUser();
+
+        if (principal == null) return;
+
+        UUID userId = UUID.fromString(principal.getName());
+        UserModel model = myUserRepository.getUserByID(userId);
+
+        if (model != null) {
+
+            int newCount = model.getSessionCount() - 1;
+            model.setSessionCount(Math.max(newCount, 0));
+
+            if (model.getSessionCount() == 0) {
+                model.setOnline(false);
+            }
+        }
+
+        broadcastUsers();
     }
 
-//    @EventListener
-//    public void trackUser(SessionConnectedEvent event) {
-//        // ต้องมั่นใจว่า Repository คืนค่าเป็น List เปล่า [] ไม่ใช่ null
-//        var users = myUserRepository.getUserList();
-//        if (users != null) {
-//            messagingTemplate.convertAndSend("/topic/user-list", users);
-//        }
-//    }
+    private void broadcastUsers() {
+        messagingTemplate.convertAndSend(
+                "/topic/user-list",
+                myUserRepository.getOnlineUsers()
+        );
+
+        messagingTemplate.convertAndSend(
+                "/topic/user-number",
+                myUserRepository.getOnlineUsers().size()
+        );
+    }
 }
